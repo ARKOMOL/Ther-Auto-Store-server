@@ -1,4 +1,4 @@
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const express = require('express');
 const app = express()
 const cors = require('cors');
@@ -21,6 +21,8 @@ async function run(){
     try{
         await client.connect();
         const partsCollection = client.db('manufracter').collection('parts');
+        const reviewsCollection = client.db('manufracter').collection('review');
+        
 
  
           /* get data */
@@ -30,7 +32,25 @@ async function run(){
             const cursor = partsCollection.find(query);
             const parts = await cursor.toArray();
             res.send(parts)
+          }); 
+          
+          /* get Review*/
+
+          app.get('/review', async (req, res) => {
+            const query = {};
+            const cursor = reviewsCollection.find(query);
+            const reviews = await cursor.toArray();
+            res.send(reviews)
           });
+
+          //purchase product
+          app.get('/purchase/:id',async (req,res)=>{
+            const id = req.params.id;
+            const query ={_id: ObjectId(id)};
+            const purchasePart = await partsCollection.findOne(query);
+            res.send(purchasePart); 
+        })
+
     }
     finally{
         
