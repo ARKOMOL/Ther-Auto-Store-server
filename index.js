@@ -33,6 +33,14 @@ async function run(){
             const parts = await cursor.toArray();
             res.send(parts)
           }); 
+
+          /* add products */
+          app.post('/parts',async (req,res)=>{
+            const newParts= req.body;
+            const result = await partsCollection.insertOne(newParts);
+            res.send(result);
+    
+        })
           
           /* get Review*/
 
