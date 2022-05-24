@@ -1,4 +1,4 @@
-const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId, ObjectID } = require('mongodb');
 const express = require('express');
 const app = express()
 const cors = require('cors');
@@ -57,7 +57,17 @@ async function run(){
             const query ={_id: ObjectId(id)};
             const purchasePart = await partsCollection.findOne(query);
             res.send(purchasePart); 
-        })
+        });
+
+
+         /*===================Manage all items(delete)======================*/
+
+    app.delete('/purchase/:id', async (req,res)=>{
+        const id = req.params.id;
+        const query ={_id: ObjectId(id)};
+        const deletePart = await partsCollection.deleteOne(query);
+        res.send(deletePart);
+    })
 
     }
     finally{
