@@ -18,13 +18,20 @@ const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
 
 function verifyJWT(req, res, next) {
-   console.log('avc');
-   const authHeader = req.headers.authorization;
-   if (!authHeader) {
-     return res.status(401).send({message: 'UnAuthorized Access'})
-   }
+  const authHeader = req.headers.authorization;
+  if (!authHeader) {
+    return res.status(401).send({ message: 'UnAuthorized access' });
   }
-  
+  const token = authHeader.split(' ')[1];
+  jwt.verify(token, process.env.ACCECSS_TOKEN_SECRET, function (err, decoded) {
+    if (err) {
+      console.log(err);
+      return res.status(403).send({ message: 'Forbidden access' })
+    }
+    req.decoded = decoded;
+    next();
+  });
+}
   /* =================== */
 /* ======================================================= */
 async function run(){
@@ -46,26 +53,28 @@ async function run(){
             const parts = await cursor.toArray();
             res.send(parts)
           }); 
+ 
 
 
-
-          app.get('/user',async (req, res) => {
+          app.get('/user', verifyJWT, async (req, res) => {
             const users = await userCollection.find().toArray();  
             res.send(users);
           });
         //   admin 
 
-        app.put('/user/admin/:email', async (req, res) => {  
-            const email = req.params.email;
-            // console.log(email);
-            const requester = req.decoded.email;
+        app.put('/user/admin/:email',verifyJWT,  async (req, res) => {  
+            const mail = req.params.email;
+            console.log(mail);
+            const authorization = req.headers.authorization;
+            console.log(authorization,'auth');
+            const requester = req.decoded.mail; 
             console.log(requester);
-            const requesterAccount = await userCollection.findOne({email: requester})
+            const requesterAccount = await userCollection.findOne({email: requester}) 
             if (requesterAccount.role === 'admin') {
-              const filter = { email: email }; 
-            const updateDoc = { 
-              $set: {role:'admin'}, 
-            };
+              const filter = { email: mail }; 
+              const updateDoc = {
+                $set: { role: 'admin' },
+              };
             const result = await userCollection.updateOne(filter, updateDoc);
            res.send(result);
             }
@@ -77,13 +86,13 @@ async function run(){
                 
 
 
-        /*   // admin role 
+     /*   // admin role 
           app.get('/admin/:email', async (req, res) => {  
             const email = req.params.email;
             const user = await userCollection.findOne({email: email});
             const isAdmin = user.role === 'admin';
             res.send({admin: isAdmin})
-          }) */
+          })  */
 
           //user
           app.put('/user/:email', async (req, res) => {  
@@ -91,11 +100,11 @@ async function run(){
             const user = req.body;
             const filter = { email: email }; 
             const options = { upsert: true };
-            const updateDoc = { 
+            const updateDoc = {  
               $set: user,
             };
-            const result = await userCollection.updateOne(filter, updateDoc, options);
-          const token =jwt.sign({email:email},process.env.ACCECSS_TOKEN_SECRET,{expiresIn: '1h'})
+            const result = await userCollection.updateOne(filter, updateDoc, options); 
+          const token =jwt.sign({email:email},process.env.ACCECSS_TOKEN_SECRET,{expiresIn: '24h'})
             res.send({result,token});
           });
   
@@ -104,7 +113,13 @@ async function run(){
           app.post('/parts',async (req,res)=>{
             const newParts= req.body;
             const result = await partsCollection.insertOne(newParts);
-            res.send(result);
+            res.send(result); 
+    
+        })  /* add products */
+          app.post('/review',async (req,res)=>{
+            const newReview= req.body;
+            const result = await reviewsCollection.insertOne(newReview);
+            res.send(result); 
     
         })
           
@@ -124,7 +139,7 @@ async function run(){
             const purchasePart = await partsCollection.findOne(query);
             res.send(purchasePart); 
         });
-              // orders placed
+              // orders placed 
               app.post('/order',async(req,res)=>{
                 const orders = req.body;
 
@@ -134,8 +149,8 @@ async function run(){
 
               // get order to user 
               app.get('/order',async(req,res)=>{
-                const orderEmail = req.query.userEmail;
-                const query = {order: orderEmail};
+                const email = req.query.email;
+                const query = { orderinfo : email};
                 const orderlist = await orderCollection.find(query).toArray();
                 res.send(orderlist) 
 
@@ -144,7 +159,7 @@ async function run(){
                                
 
 
-         /*===================Manage all items(delete)======================*/
+ /*===================Manage all items(delete)======================*/
 
     app.delete('/purchase/:id', async (req,res)=>{
         const id = req.params.id; 
