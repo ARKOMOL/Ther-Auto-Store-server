@@ -48,7 +48,8 @@ async function run(){
 
           app.get('/parts',async (req, res) => {
             const query = {};
-           
+            const authorization = req.headers.authorization;
+            console.log(authorization,'auth');
             const cursor = partsCollection.find(query);
             const parts = await cursor.toArray();
             res.send(parts)
@@ -62,37 +63,33 @@ async function run(){
           });
         //   admin 
 
-        app.put('/user/admin/:email',verifyJWT,  async (req, res) => {  
-            const mail = req.params.email;
-            console.log(mail);
-            const authorization = req.headers.authorization;
-            console.log(authorization,'auth');
-            const requester = req.decoded.mail; 
-            console.log(requester);
-            const requesterAccount = await userCollection.findOne({email: requester}) 
-            if (requesterAccount.role === 'admin') {
-              const filter = { email: mail }; 
-              const updateDoc = {
-                $set: { role: 'admin' },
-              };
+        app.put('/user/admin/:email', verifyJWT, async (req, res) => {
+          const email = req.params.email;
+          const requester = req.decoded.email;
+          const requesterAccount = await userCollection.findOne({ email: requester });
+          if (requesterAccount.role === 'admin') {
+            const filter = { email: email };
+            const updateDoc = {
+              $set: { role: 'admin' },
+            };
             const result = await userCollection.updateOne(filter, updateDoc);
-           res.send(result);
-            }
-            else{
-              res.status(403).send({ message: 'Forbidden ' })
-            }
-           
-            });
+            res.send(result);
+          }
+          else{
+            res.status(403).send({message: 'forbidden'});
+          }
+    
+        })
                 
 
 
-     /*   // admin role 
+        // admin role 
           app.get('/admin/:email', async (req, res) => {  
             const email = req.params.email;
             const user = await userCollection.findOne({email: email});
             const isAdmin = user.role === 'admin';
             res.send({admin: isAdmin})
-          })  */
+          })  
 
           //user
           app.put('/user/:email', async (req, res) => {  
@@ -109,7 +106,7 @@ async function run(){
           });
   
    
-          /* add products */
+          /* add products */ 
           app.post('/parts',async (req,res)=>{
             const newParts= req.body;
             const result = await partsCollection.insertOne(newParts);
