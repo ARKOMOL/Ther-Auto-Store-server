@@ -58,9 +58,9 @@ async function run(){
 
           app.get('/order-list',async (req, res) => {
             const query = {};
-            const cursor = orderCollection.find(query);
-            const orders = await cursor.toArray();
-            res.send(orders)
+            const cursor = orderCollection.find(query); 
+            const orders = await cursor.toArray(); 
+            res.send(orders) 
           }); 
  
 
@@ -196,7 +196,7 @@ async function run(){
     app.delete('/orderList/:id', async (req,res)=>{ 
         const id = req.params.id;  
         const query ={_id: ObjectId(id)};
-        const deleteorder = await orderCollection.deleteOne(query); 
+        const deleteorder = await orderCollection.deleteOne(query);    
         res.send(deleteorder);
     })
 
