@@ -54,6 +54,14 @@ async function run(){
             const parts = await cursor.toArray();
             res.send(parts)
           }); 
+          /* get data */
+
+          app.get('/order-list',async (req, res) => {
+            const query = {};
+            const cursor = orderCollection.find(query);
+            const orders = await cursor.toArray();
+            res.send(orders)
+          }); 
  
 
 
@@ -136,6 +144,24 @@ async function run(){
             const purchasePart = await partsCollection.findOne(query);
             res.send(purchasePart); 
         });
+
+          // purchase quantity 
+          app.put('/purchase/:id', async (req,res)=>{
+            const id = req.params.id;
+            const updateQuantity= req.body;
+            console.log(updateQuantity);
+            const filter ={_id: ObjectId(id)};
+            const options = {upsert: true};
+            const updatedoc ={
+                $set:{
+                  availableQuantity: updateQuantity.quantity
+                }
+            };
+          const result = await partsCollection.updateOne(filter,updatedoc,options)
+            res.send(result);
+        })
+
+
               // orders placed 
               app.post('/order',async(req,res)=>{
                 const orders = req.body;
@@ -145,11 +171,13 @@ async function run(){
               })
 
               // get order to user 
-              app.get('/order',async(req,res)=>{
-                const email = req.query.email;
-                const query = { orderinfo : email};
+              app.get('/order', async(req,res)=>{
+                const Oremail = req.query.email;
+              
+                  const query = { Oremail : Oremail};
                 const orderlist = await orderCollection.find(query).toArray();
                 res.send(orderlist) 
+              
 
 
               })
